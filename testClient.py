@@ -1,7 +1,11 @@
 #!/usr/bin/env python3.4
 
 """
-Docstring + License Here
+IRC clientside library
+
+Copyright (C) 2014, Tyler Philbrick
+All Rights Reserved
+For license information, see COPYING
 """
 
 import irc
