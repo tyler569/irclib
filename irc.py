@@ -30,7 +30,8 @@ class client(object):
 	def __send(self, message):
 		"""Private method invoked by others to send on socket
 
-		Adds \r\n at the end of messages"""
+		Adds \r\n at the end of messages
+		"""
 		if self.printing:
 			print("<< " + message)
 		self.sock.sendall((message + "\r\n").encode())
@@ -48,7 +49,8 @@ class client(object):
 		"""Binds or changes client nickname
 
 		Note that some servers require you to privmsg a nickname bot
-		to verify registerd nicknames"""
+		to verify registerd nicknames
+		"""
 		send = "NICK {}".format(new_nick)
 		self.__send(send)
 
@@ -63,18 +65,20 @@ class client(object):
 	def privmsg(self, target, message):
 		"""Sends a message to <target>
 
-		Can be channel or individual"""
+		Can be channel or individual
+		"""
 		send = "PRIVMSG {} :{}".format(target, message)
 		self.__send(send)
 	
 	def __pong(self, arg):
 		"""Implements responding to server pings
 
-		do not call or modify"""
+		do not call or modify
+		"""
 		send = "PONG :{}".format(arg)
 		self.__send(send)
 
-	def __parse(line):
+	def __parse(self, line):
 		"""Parses IRC message
 
 		Input is line from the IRC server stripped of \r\n,
@@ -86,7 +90,8 @@ class client(object):
 			params: the command's parameters as a list
 			trail: the IRC line's trailing section.  If the line is a 
 				user chat, the message is here
-		any part of the line not included is None"""
+		Any part of the line not included is None
+		"""
 		
 		prefix = nick = params = trail = None
 		
@@ -145,7 +150,8 @@ class client(object):
 	def __preproc_line(self, p_line):
 		"""Line preprocessor,
 
-		deals with such details as responding to server pings"""
+		deals with such details as responding to server pings
+		"""
 		if p_line.command == "PING":
 			self.__pong(p_line.trail)
 			return True
@@ -157,7 +163,8 @@ class client(object):
 	def __handle_retcode(self, p_line):
 		"""Handling of return codes
 
-		This may not be implemented"""
+		This may not be implemented
+		"""
 		#IN HERE:
 		#SOME retcodes change state info (I.E. motd stored for retrieval)
 		#MOST DO NOTHING HERE
