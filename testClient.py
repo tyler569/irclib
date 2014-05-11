@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.4
 
 """
-IRC clientside library
+Simple IRC test client for irc.py
 
 Copyright (C) 2014, Tyler Philbrick
 All Rights Reserved
