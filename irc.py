@@ -15,7 +15,7 @@ class client(object):
 
 	example usage:
 	x = irc.client()
-	x.connect("irc.freenode.net")
+	x.connect(("irc.freenode.net", 6667))
 	x.ident("username", "hostname", "realname")
 	x.nick("nickname")
 	x.join("#channel")
@@ -36,9 +36,12 @@ class client(object):
 			print("<< " + message)
 		self.sock.sendall((message + "\r\n").encode())
 
-	def connect(self, server_name):
-		"""Implements socket connection to IRC server"""
-		self.sock.connect((server_name, 6667))
+	def connect(self, server_info):
+		"""Implements socket connection to IRC server
+		
+		server_info is tuple of (hostname, port)
+		"""
+		self.sock.connect(server_info)
 
 	def ident(self, usern, hostn, realn):
 		"""Sends client identity to server"""
