@@ -27,7 +27,7 @@ class client(object):
 		self.sock = socket.socket()
 		self.printing = True
 		
-	def __send(self, message):
+	def _send(self, message):
 		"""Private method invoked by others to send on socket
 
 		Adds \r\n at the end of messages
@@ -46,7 +46,7 @@ class client(object):
 	def ident(self, usern, hostn, realn):
 		"""Sends client identity to server"""
 		send = "USER {} HOST {} bla:{}".format(usern, hostn, realn)
-		self.__send(send)
+		self._send(send)
 	
 	def nick(self, new_nick):
 		"""Binds or changes client nickname
@@ -55,12 +55,12 @@ class client(object):
 		to verify registerd nicknames
 		"""
 		send = "NICK {}".format(new_nick)
-		self.__send(send)
+		self._send(send)
 
 	def join(self, new_channel):
 		"""Implements client joining a channel"""
 		send = "JOIN {}".format(new_channel)
-		self.__send(send)
+		self._send(send)
 		#TODO - 
 		#Have the server's "JOIN" responce set the object's
 		#current channels for retrieval
@@ -71,17 +71,17 @@ class client(object):
 		Can be channel or individual
 		"""
 		send = "PRIVMSG {} :{}".format(target, message)
-		self.__send(send)
+		self._send(send)
 	
-	def __pong(self, arg):
+	def _pong(self, arg):
 		"""Implements responding to server pings
 
 		do not call or modify
 		"""
 		send = "PONG :{}".format(arg)
-		self.__send(send)
+		self._send(send)
 
-	def __parse(self, line):
+	def _parse(self, line):
 		"""Parses IRC message
 
 		Input is line from the IRC server stripped of \r\n,
@@ -145,25 +145,25 @@ class client(object):
 				
 				if self.printing:
 					print(">> " + line)
-				p_line = self.__parse(line)
+				p_line = self._parse(line)
 				
-				if not self.__preproc_line(p_line):	
+				if not self._preproc_line(p_line):	
 					yield p_line
 
-	def __preproc_line(self, p_line):
+	def _preproc_line(self, p_line):
 		"""Line preprocessor,
 
 		deals with such details as responding to server pings
 		"""
 		if p_line.command == "PING":
-			self.__pong(p_line.trail)
+			self._pong(p_line.trail)
 			return True
 		elif is_retcode(p_line.command):
-			self.__handle_retcode(p_line)
+			self._handle_retcode(p_line)
 			return False
 		return False
 
-	def __handle_retcode(self, p_line):
+	def _handle_retcode(self, p_line):
 		"""Handling of return codes
 
 		This may not be implemented
