@@ -1,1 +1,2 @@
-import irc
+import client
+
