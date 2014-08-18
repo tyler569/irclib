@@ -28,6 +28,8 @@ class client(object):
 		"""Initialiser creates an unbound socket"""
 		self.sock = socket.socket()
 		self.printing = True
+		self.read_line_enable = False
+		self.reg_func = {}
 		
 	def _send(self, message):
 		"""Private method invoked by others to send on socket
@@ -42,8 +44,10 @@ class client(object):
 		"""Implements socket connection to IRC server
 		
 		server_info is tuple of (hostname, port)
+		Also registers PONG - may be temporary
 		"""
 		self.sock.connect(server_info)
+		self.register("PONG", self._pong)
 
 	def ident(self, usern, hostn, realn):
 		"""Sends client identity to server"""
@@ -74,6 +78,16 @@ class client(object):
 		"""
 		send = "PRIVMSG {} :{}".format(target, message)
 		self._send(send)
+
+	def register(self, command, function):
+		"""Register a command
+		NB: when registering a user command (from chat) ensure you use
+		a prefix to avoid confising with normal chats or server commands
+		"""
+		self.reg_func[command] = function
+
+	def get_registered(self):
+		return self.reg_func
 	
 	def _pong(self, arg):
 		"""Implements responding to server pings
@@ -106,39 +120,16 @@ class client(object):
 					print(">> " + line)
 				p_line = parser.parse(line)
 				
-				if not self._preproc_line(p_line):	
+				if self.read_line_enable:
 					yield p_line
 
-	def _preproc_line(self, p_line):
-		"""Line preprocessor,
-
-		deals with such details as responding to server pings
-		"""
-		if p_line.command == "PING":
-			self._pong(p_line.trail)
+	def _handle_register(self, p_line):
+		"""Handling of registered operations"""
+		if p_line.command in self.reg_func:
+			self.reg_func(p_line)
 			return True
-		elif is_retcode(p_line.command):
-			self._handle_retcode(p_line)
-			return False
+		if p_line.trail[:p_line.trail.find(" ")] in self.reg_func:
+			self.reg_func(p_line)
+			return True
 		return False
-
-	def _handle_retcode(self, p_line):
-		"""Handling of return codes
-
-		This may not be implemented
-		"""
-		#IN HERE:
-		#SOME retcodes change state info (I.E. motd stored for retrieval)
-		#MOST DO NOTHING HERE
-		#BUT they call an overwritable func
-		pass
-
-def is_retcode(command):
-	"""Determines if the command is a return code of form \d{3}"""
-	if len(command) == 3:
-		try:
-			int(command)
-			return True
-		except ValueError:
-			return False
 
