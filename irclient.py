@@ -19,3 +19,4 @@ x.ident(USERN, HOSTN, REALN)
 x.nick(NICK)
 x.join(CHANNEL)
 
+for i in x.read_lines(): pass
