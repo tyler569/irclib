@@ -9,10 +9,11 @@ For license information, see COPYING
 import socket
 from collections import namedtuple
 
-from lib.parser import irc_parse
+from client.parser import IRCLine
+from client.pong import _pong
 
 
-class client(object):
+class Client(object):
 	"""Client object makes connection to IRC server and handles data
 
 	example usage:
@@ -21,16 +22,16 @@ class client(object):
 	x.ident("username", "hostname", "realname")
 	x.nick("nickname")
 	x.join("#channel")
-	for i in x.readlines():
-		do things
 	"""
+	#TODO : update usage example
+
 	def __init__(self):
 		"""Initialiser creates an unbound socket"""
-		self.sock = socket.socket()
+		self.sock = socket.socket(socket.AF_INET6)
 		self.printing = True
 		self.read_line_enable = False
-		self.reg_func = {}
-		self.register("PING", self._pong)
+		self.regd_funcs = {}
+		self.register("PING", _pong)
 
 	def _send(self, message):
 		"""Private method invoked by others to send on socket
@@ -43,7 +44,7 @@ class client(object):
 
 	def connect(self, server_info):
 		"""Implements socket connection to IRC server
-		
+
 		server_info is tuple of (hostname, port)
 		"""
 		self.sock.connect(server_info)
@@ -52,7 +53,7 @@ class client(object):
 		"""Sends client identity to server"""
 		send = "USER {} HOST {} bla:{}".format(usern, hostn, realn)
 		self._send(send)
-	
+
 	def nick(self, new_nick):
 		"""Binds or changes client nickname
 
@@ -66,7 +67,7 @@ class client(object):
 		"""Implements client joining a channel"""
 		send = "JOIN {}".format(new_channel)
 		self._send(send)
-		
+
 	def privmsg(self, target, message):
 		"""Sends a message to <target>
 
@@ -80,27 +81,19 @@ class client(object):
 		NB: when registering a user command (from chat) ensure you use
 		a prefix to avoid confising with normal chats or server commands
 		"""
-		self.reg_func[command] = function
+		self.regd_funcs[command] = function
 
 	def get_registered(self):
-		return self.reg_func
+		return self.regd_funcs
 
-	def _pong(self, p_line):
-		"""Implements responding to server pings
-
-		do not call or modify
-		"""
-		send = "PONG :{}".format(p_line.trail)
-		self._send(send)
-
-	def read_lines(self, sock = None, recv_buffer = 1024, delim = "\r\n"):
+	def run(self, sock = None, recv_buffer = 1024, delim = "\r\n"):
 		"""Generator that produces parsed lines as they come in"""
 		#Adapted from https://synack.me/blog/using-python-tcp-sockets
-		
+
 		#Sets the socket to the class socket if no name provided
 		#Can not be done in def due to scope of "self"
 		sock = sock or self.sock
-		
+
 		buffer = ""
 		data = True
 		while data:
@@ -109,25 +102,15 @@ class client(object):
 
 			while buffer.find(delim) != -1:
 				line, buffer = buffer.split(delim, 1)
-				
+
 				if self.printing:
 					print(">> " + line)
-				p_line = irc_parse(line)
-				if self._handle_register(p_line):
-					continue
-
-				if self.read_line_enable:
-					yield p_line
+				p_line = IRCLine(line).parsed
+				self._handle_register(p_line)
 
 	def _handle_register(self, p_line):
 		"""Handling of registered operations"""
-		if p_line.command in self.reg_func:
-			self.reg_func[p_line.command](p_line)
-			return True
-		if not isinstance(p_line.trail, str):
-			return False
-		if p_line.trail[:p_line.trail.find(" ")] in self.reg_func:
-			self.reg_func[p_line.trail](p_line)
-			return True
-		return False
+		if p_line.command in self.regd_funcs:
+			self.regd_funcs[p_line.command](self, p_line)
+		#TODO : first word of trail
 

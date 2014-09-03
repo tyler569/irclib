@@ -8,15 +8,24 @@ All Rights Reserved
 For license information, see COPYING
 """
 
-import lib.irclib as irclib
+from client.irclib import Client
 from private import *
 #This file sets local variables such as channel and nicknames
 
-x = irclib.client()
+x = Client()
 
 x.connect(SERVER)
 x.ident(USERN, HOSTN, REALN)
 x.nick(NICK)
-x.join(CHANNEL)
 
-for i in x.read_lines(): pass
+def join(irc, line):
+	irc.join(CHANNEL)
+
+def bye(irc, line):
+	irc.privmsg(CHANNEL, "ohai <3")
+	irc.privmsg(CHANNEL, "bai <3")
+
+x.register("MODE", join)
+x.register("JOIN", bye)
+
+x.run()
