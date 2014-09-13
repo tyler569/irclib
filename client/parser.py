@@ -29,10 +29,10 @@ class IRCLine(object):
 
 
 	def parse(self):
-		prefix = nick = params = trail = None
+		prefix = nick = params = trail = usrcmd = None
 
 		message = namedtuple("Message",
-				"raw, prefix, nick, command, params, trail")
+				"raw, prefix, nick, command, params, trail, usrcmd")
 
 		if self.line[0] == ":":
 			prefix_end = self.line.find(" ")
@@ -55,6 +55,8 @@ class IRCLine(object):
 		command = cmd_and_params[0]
 		if len(cmd_and_params) > 0:
 			params = cmd_and_params[1:]
-		return message(self.line, prefix, nick, command, params, trail)
+		if trail:
+			usrcmd = trail[:trail.find(" ")]
+		return message(self.line, prefix, nick, command, params, trail, usrcmd)
 
 

@@ -4,3 +4,11 @@ HOSTN = "quetzal.vms.pw"
 REALN = "TylerBot"
 NICK = "tbot569"
 CHANNEL = "#squirrels"
+'''
+SERVER = ("irc.freenode.net", 6667)
+USERN = "tbot569"
+HOSTN = "quetzal.vms.pw"
+REALN = "TylerBot"
+NICK = "tbot569"
+CHANNEL = "#OREServerChat"
+'''

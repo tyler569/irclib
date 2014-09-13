@@ -1,0 +1,12 @@
+connection:
+  server: irc.esper.net
+  port: 6667
+
+names:
+  user: tyler
+  host: quetzal.vms.pw
+  real: tyler
+
+nick: tbot569
+
+channel: "#squirrels"

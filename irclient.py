@@ -8,24 +8,39 @@ All Rights Reserved
 For license information, see COPYING
 """
 
+#PyYAML http://pyyaml.org/ 
+#pip install pyyaml
+import yaml
+
 from client.irclib import Client
-from private import *
-#This file sets local variables such as channel and nicknames
 
-x = Client()
+if __name__ == "__main__":
+	with open("./config.yml", "r") as f:
+		conf = yaml.load(f)
 
-x.connect(SERVER)
-x.ident(USERN, HOSTN, REALN)
-x.nick(NICK)
+	x = Client()
 
-def join(irc, line):
-	irc.join(CHANNEL)
+	x.connect((conf["connection"]["server"], conf["connection"]["port"]))
+	x.ident(conf["names"])
+	x.nick(conf["nick"])
 
-def bye(irc, line):
-	irc.privmsg(CHANNEL, "ohai <3")
-	irc.privmsg(CHANNEL, "bai <3")
+	@x.register_dec("MODE")
+	def join(irc, line):
+		irc.join(conf["channel"])
 
-x.register("MODE", join)
-x.register("JOIN", bye)
+	
+	@x.register_dec("PING")
+	def _pong(irc, line):
+		"""Implements responding to server pings
 
-x.run()
+		do not call or modify
+		"""
+		send = "PONG :{}".format(line.trail)
+		irc._send(send)
+
+	@x.register_dec("!hello")
+	def test(irc, line):
+		irc.privmsg(conf["channel"], "Test successful")
+
+
+	x.alt_run()

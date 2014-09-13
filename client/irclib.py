@@ -7,10 +7,9 @@ For license information, see COPYING
 """
 
 import socket
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 from client.parser import IRCLine
-from client.pong import _pong
 
 
 class Client(object):
@@ -19,7 +18,7 @@ class Client(object):
 	example usage:
 	x = irclib.client()
 	x.connect(("irc.freenode.net", 6667))
-	x.ident("username", "hostname", "realname")
+	x.ident(("username", "hostname", "realname"))
 	x.nick("nickname")
 	x.join("#channel")
 	"""
@@ -27,11 +26,11 @@ class Client(object):
 
 	def __init__(self):
 		"""Initialiser creates an unbound socket"""
-		self.sock = socket.socket(socket.AF_INET6)
+		self.sock = socket.socket(socket.AF_INET)
 		self.printing = True
 		self.read_line_enable = False
-		self.regd_funcs = {}
-		self.register("PING", _pong)
+		self.regd_funcs = defaultdict(list)
+		
 
 	def _send(self, message):
 		"""Private method invoked by others to send on socket
@@ -49,9 +48,18 @@ class Client(object):
 		"""
 		self.sock.connect(server_info)
 
-	def ident(self, usern, hostn, realn):
-		"""Sends client identity to server"""
-		send = "USER {} HOST {} bla:{}".format(usern, hostn, realn)
+	def ident(self, names):
+		"""Sends client identity to server,
+
+		Can take either an arbitrary iterable eqivalent to
+		[user, host, real]
+		or a dict of schema:
+		{'user':user, 'host':host, 'real':real}
+		"""
+		if isinstance(names, dict):	
+			send = "USER {user} HOST {host} bla:{real}".format(**names)
+		else:
+			send = "USER {} HOST {} bla:{}".format(*names)
 		self._send(send)
 
 	def nick(self, new_nick):
@@ -76,22 +84,46 @@ class Client(object):
 		send = "PRIVMSG {} :{}".format(target, message)
 		self._send(send)
 
-	def register(self, command, function):
-		"""Register a command
+	def register_func(self, cmd, func):
+		"""Register a command to an IRC code or chat command
 		NB: when registering a user command (from chat) ensure you use
 		a prefix to avoid confising with normal chats or server commands
 		"""
-		self.regd_funcs[command] = function
+		self.regd_funcs[cmd].append(func)
+	
+	def register_dec(self, cmd):
+		"""Decorator to register a command
+		for example:
+		x = Client()
+		
+		@x.register_dec("PING")
+		def pong(irc, line):
+			#do stuff
+		"""
+		def wrapper(func):
+			self.register_func(cmd, func)
+			return func
+		return wrapper
 
 	def get_registered(self):
+		"""Return the defaultdict of registered funcs"""
 		return self.regd_funcs
 
-	def run(self, sock = None, recv_buffer = 1024, delim = "\r\n"):
-		"""Generator that produces parsed lines as they come in"""
+	def _handle_register(self, p_line):
+		"""Handling of registered operations"""
+		if p_line.command in self.regd_funcs:
+			for func in self.regd_funcs[p_line.command]:
+				func(self, p_line)
+		elif p_line.usrcmd in self.regd_funcs:
+			for func in self.regd_funcs[p_line.usrcmd]:
+				func(self, p_line)
+	
+
+	def run(self, sock=None, recv_buffer=1024, delim="\r\n"):
+		"""Run irc program"""
 		#Adapted from https://synack.me/blog/using-python-tcp-sockets
 
-		#Sets the socket to the class socket if no name provided
-		#Can not be done in def due to scope of "self"
+		#Sets the socket to the object's socket if no name provided
 		sock = sock or self.sock
 
 		buffer = ""
@@ -108,9 +140,12 @@ class Client(object):
 				p_line = IRCLine(line).parsed
 				self._handle_register(p_line)
 
-	def _handle_register(self, p_line):
-		"""Handling of registered operations"""
-		if p_line.command in self.regd_funcs:
-			self.regd_funcs[p_line.command](self, p_line)
-		#TODO : first word of trail
+	def alt_run(self, sock=None):
+		sock = sock or self.sock
+
+		for line in sock.makefile():
+			if self.printing:
+				print((">> " + line).rstrip('\r\n'))
+			p_line = IRCLine(line).parsed
+			self._handle_register(p_line)
 

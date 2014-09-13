@@ -1,5 +1,5 @@
 
-def _pong(irc, line):
+def pong(irc, line):
 	"""Implements responding to server pings
 
 	do not call or modify
