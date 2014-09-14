@@ -50,7 +50,10 @@ def parse(line):
 	if len(cmd_and_params) > 0:
 		params = cmd_and_params[1:]
 	if trail:
-		usrcmd = trail[:trail.find(" ")]
+		usrcmd_end = trail.find(" ")
+		if usrcmd_end == -1:
+			usrcmd_end = None
+		usrcmd = trail[:usrcmd_end]
 	return message(line, prefix, nick, command, params, trail, usrcmd)
 
 

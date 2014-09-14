@@ -12,13 +12,14 @@ For license information, see COPYING
 #pip install pyyaml
 import yaml
 
-from client.baseclient import BaseClient
+#from client.baseclient import BaseClient
+from myirc import MyIRC2
 
 if __name__ == "__main__":
 	with open("./config.yml", "r") as f:
 		conf = yaml.load(f)
 
-	x = BaseClient(
+	x = MyIRC2(
 		(conf["connection"]["server"], conf["connection"]["port"]),
 		conf["names"],
 		conf["nick"],
