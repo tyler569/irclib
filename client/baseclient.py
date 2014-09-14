@@ -5,7 +5,7 @@ from client.metairc import MetaIRC
 class BaseClient(BaseIRC, metaclass=MetaIRC):
 	def start(self) -> "IRC_START":
 		"""Initiates connection"""
-		self.sock.connect(self.server)
+		self.connect()
 		self.ident()
 		self.set_nick()
 
