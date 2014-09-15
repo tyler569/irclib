@@ -1,6 +1,14 @@
+"""
+Base client class for my IRC clientside library
+
+Copyright (C) 2014, Tyler Philbrick
+All Rights Reserved
+For license information, see COPYING
+"""
 
 from client.baseirc import BaseIRC
 from client.metairc import MetaIRC
+
 
 class BaseClient(BaseIRC, metaclass=MetaIRC):
 	def start(self) -> "IRC_START":

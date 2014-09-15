@@ -12,7 +12,7 @@ For license information, see COPYING
 #pip install pyyaml
 import yaml
 
-#from client.baseclient import BaseClient
+#from irc.lib.baseclient import BaseClient
 from myirc import MyIRC2
 
 if __name__ == "__main__":
