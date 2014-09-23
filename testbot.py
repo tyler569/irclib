@@ -1,29 +1,30 @@
 #!/usr/bin/env python3
 
 """
-Test Client for irclib
+Example Client for irclib
 
 Copyright (C) 2014, Tyler Philbrick
 All Rights Reserved
 For license information, see COPYING
 """
 
-#PyYAML http://pyyaml.org/ 
-#pip install pyyaml
-import yaml
+from irclib.baseclient import BaseClient
 
-#from irc.lib.baseclient import BaseClient
-from myirc import MyIRC2
+
+class MyIRC(BaseClient):
+    def hello_world(self, line):
+        if line.nick == self.nick:
+            self.privmsg("Hello everyone :D")
+        else:
+            self.privmsg("Hello " + line.nick)
+
 
 if __name__ == "__main__":
-	with open("./config.yml", "r") as f:
-		conf = yaml.load(f)
-
-	x = MyIRC2(
-		(conf["connection"]["server"], conf["connection"]["port"]),
-		conf["names"],
-		conf["nick"],
-		conf["channel"]
-	)
-		
-	x.run()
+    irc = MyIRC2(
+        ("server.ip", 6667),
+        ("usern", "hostn", "realn")
+        "nickn",
+        "#channel"
+    )
+        
+    irc.run()
