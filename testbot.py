@@ -12,17 +12,20 @@ from irclib.baseclient import BaseClient
 
 
 class MyIRC(BaseClient):
-    def hello_world(self, line):
+    def handle_JOIN(self, line):
         if line.nick == self.nick:
             self.privmsg("Hello everyone :D")
         else:
             self.privmsg("Hello " + line.nick)
 
+    def handle_PART(self, line):
+        self.privmsg("I miss him already D:")
+
 
 if __name__ == "__main__":
-    irc = MyIRC2(
+    irc = MyIRC(
         ("server.ip", 6667),
-        ("usern", "hostn", "realn")
+        ("usern", "hostn", "realn"),
         "nickn",
         "#channel"
     )

@@ -7,21 +7,21 @@ For license information, see COPYING
 """
 
 from irclib.baseirc import BaseIRC
-from irclib.metairc import MetaIRC
 
 
-class BaseClient(BaseIRC, metaclass=MetaIRC):
-    def start(self) -> "IRC_START":
+class BaseClient(BaseIRC):
+    def __init__(self, *args, **kwargs):
         """Initiates connection"""
+        super().__init__(*args, **kwargs)
         self.connect()
         self.ident()
         self.set_nick()
 
-    def pong(self, line) -> "PING":
+    def handle_PING(self, line):
         """Implements PONG"""
         send = "PONG :{}".format(line.trail)
         self._send(send)
 
-    def channel_join(self, line) -> "376":
+    def handle_376(self, line):
         """Sends JOIN message at the end of the MOTD"""
         self.join()

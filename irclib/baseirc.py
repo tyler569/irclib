@@ -19,8 +19,6 @@ class BaseIRC(object):
     """
     #TODO : update usage example
 
-    regd_funcs = {}
-
     def __init__(self, server, names, nick, channel, sock=None, printing=True):
         """Initialiser creates an unbound socket"""
         self.sock = sock or socket.socket()
@@ -29,8 +27,6 @@ class BaseIRC(object):
         self.nick = nick
         self.channel = channel
         self.printing = printing
-
-        self.__class__.regd_funcs["IRC_START"](self)
 
     def _send(self, message):
         """Private method invoked by others to send on socket
@@ -90,17 +86,12 @@ class BaseIRC(object):
         send = "PRIVMSG {} :{}".format(target, message)
         self._send(send)
 
-    def _handle_register(self, p_line):
+    def _handle_register(self, line):
         """Handling of registered operations"""
-        if p_line.command in self.__class__.regd_funcs:
-            if p_line.command in self.__class__.regd_funcs:
-                self.__class__.regd_funcs[p_line.command](self, p_line)
-        elif (p_line.command == "PRIVMSG" and
-             p_line.usrcmd in self.__class__.regd_funcs):
-            if p_line.usrcmd in self.__class__.regd_funcs:
-                self.__class__.regd_funcs[p_line.usrcmd](self, p_line)
-        if "ALL" in self.__class__.regd_funcs:
-            self.__class__.regd_funcs["ALL"](self, p_line)
+        try:
+            getattr(self, "handle_" + line.command.upper())(line)
+        except AttributeError:
+            pass
 
     def run(self):
         """Run IRC program"""
