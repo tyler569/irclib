@@ -5,18 +5,23 @@ IRC library for python 3.4+ using a class-based API
 ##Example
 
 ```python
-from irclib.client.baseclient import BaseClient
+from irclib.baseclient import BaseClient
 
-class MyClient(BaseClient):
-    def greeting(self, line) -> "JOIN":
-        self.privmsg(self.channel, "Hello! :D")
+class MyIRC(BaseClient):
+    def handle_JOIN(self, line):
+        if line.nick == self.nick:
+            self.privmsg("Hello everyone :D")
+        else:
+            self.privmsg("Hello " + line.nick)
+    def handle_PART(self, line):
+        self.privmsg("I miss him already D:")
 
-x = MyClient(
-    ("server", port),
-    ("user_name", "host_name", "real_name"),
-    "nickname",
+bot = MyIRC(
+    ("server.ip", 6667),
+    ("usern", "hostn", "realn"),
+    "nickn",
     "#channel"
 )
-
-x.run()
+    
+bot.run()
 ```
