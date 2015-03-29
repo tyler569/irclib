@@ -1,7 +1,7 @@
 """
 Base client class for my IRC clientside library
 
-Copyright (C) 2014, Tyler Philbrick
+Copyright (C) 2014, 2015 Tyler Philbrick
 All Rights Reserved
 For license information, see COPYING
 """
@@ -25,3 +25,15 @@ class BaseClient(BaseIRC):
     def handle_376(self, line):
         """Sends JOIN message at the end of the MOTD"""
         self.join()
+
+    def handle_PRIVMSG(self, line):
+        """Calls cmd_<word> when command is received"""
+        try:
+            if line.trail[0] != self.cmdchar:
+                return
+        except AttributeError:
+            return
+        try:
+            getattr(self, "cmd_" + line.trail.split()[0][1:].upper())(line)
+        except AttributeError:
+            pass
