@@ -6,8 +6,6 @@ All Rights Reserved
 For license information, see COPYING
 """
 
-from collections import namedtuple
-
 """Parses IRC message
 
 Input is line from the IRC server,
@@ -22,38 +20,58 @@ Output is named tuple with keys:
 Any part of the line not included is None
 """
 
-def parse(line):
-    prefix = nick = params = trail = usrcmd = None
+class Line(object):
+    def __init__(self, line):
+        self._raw = line
+        self._prefix = None
+        self._nick = None
+        self._command = None
+        self._params = None
+        self._trail = None
 
-    message = namedtuple("Message",
-            "raw, prefix, nick, command, params, trail, usrcmd")
-
-    if line[0] == ":":
-        prefix_end = line.find(" ")
-        prefix  = line[1:prefix_end]
-        bang_loc = prefix.find("!")
-        if bang_loc != -1:
-            nick = prefix[:bang_loc]
+        if line[0] == ":":
+            prefix_end = line.find(" ")
+            self._prefix = line[1:prefix_end]
+            bang_loc = self._prefix.find("!")
+            if bang_loc != -1:
+                self._nick = self._prefix[:bang_loc]
+            else:
+                self._nick = self._prefix
         else:
-            nick = prefix
-    else:
-        prefix_end = -1
+            prefix_end = -1
 
-    if " :" in line:
-        trail_start = line.find(" :")
-        trail = line[trail_start + 2:].rstrip("\r\n")
-    else:
-        trail_start = len(line)
+        if " :" in line:
+            trail_start = line.find(" :")
+            self._trail = line[trail_start + 2:].rstrip("\r\n")
+        else:
+            trail_start = len(line)
 
-    cmd_and_params = line[prefix_end + 1:trail_start].split(" ")
-    command = cmd_and_params[0]
-    if len(cmd_and_params) > 0:
-        params = cmd_and_params[1:]
-    if trail:
-        usrcmd_end = trail.find(" ")
-        if usrcmd_end == -1:
-            usrcmd_end = None
-        usrcmd = trail[:usrcmd_end]
-    return message(line, prefix, nick, command, params, trail, usrcmd)
+        cmd_and_params = line[prefix_end + 1:trail_start].split(" ")
+        self._command = cmd_and_params[0]
+        if len(cmd_and_params) > 0:
+            self._params = cmd_and_params[1:]
 
+    @property
+    def raw(self):
+        return self._raw
+
+    @property
+    def prefix(self):
+        return self._prefix
+
+    @property
+    def nick(self):
+        return self._nick
+
+    @property
+    def command(self):
+        return self._command
+
+    @property
+    def params(self):
+        return self._params
+
+    @property
+    def trail(self):
+        return self._trail
 

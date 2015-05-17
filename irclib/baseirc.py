@@ -9,7 +9,7 @@ For license information, see COPYING
 import socket
 from collections import namedtuple, defaultdict
 
-from irclib.parser import parse
+import irclib.parser as parser
 
 
 class BaseIRC(object):
@@ -100,6 +100,6 @@ class BaseIRC(object):
         for line in sockf:
             if self.printing:
                 print((">> " + line).rstrip('\r\n'))
-            p_line = parse(line)
+            p_line = parser.Line(line)
             self._handle_register(p_line)
 
