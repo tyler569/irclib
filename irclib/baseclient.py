@@ -16,15 +16,12 @@ class BaseClient(BaseIRC):
         self.connect()
         self.ident()
         self.set_nick()
+        self.join()
 
     def handle_PING(self, line):
         """Implements PONG"""
         send = "PONG :{}".format(line.trail)
         self._send(send)
-
-    def handle_376(self, line):
-        """Sends JOIN message at the end of the MOTD"""
-        self.join()
 
     def handle_PRIVMSG(self, line):
         """Calls cmd_<word> when command is received"""
