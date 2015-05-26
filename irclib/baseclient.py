@@ -33,4 +33,4 @@ class BaseClient(BaseIRC):
         try:
             getattr(self, "cmd_" + line.trail.split()[0][1:].upper())(line)
         except AttributeError:
-            pass
+            return

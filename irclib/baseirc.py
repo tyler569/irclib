@@ -55,9 +55,9 @@ class BaseIRC(object):
         """
         names = names or self.names
         if isinstance(names, dict):
-            send = "USER {user} HOST {host} bla:{real}".format(**names)
+            send = "USER {user} 0 * :{real}".format(**names)
         else:
-            send = "USER {} HOST {} bla:{}".format(*names)
+            send = "USER {} 0 * :{}".format(*names)
         self._send(send)
 
     def set_nick(self, nick=None):

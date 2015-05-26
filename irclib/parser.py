@@ -23,33 +23,15 @@ Any part of the line not included is None
 class Line(object):
     def __init__(self, line):
         self._raw = line
-        self._prefix = None
-        self._nick = None
-        self._command = None
-        self._params = None
-        self._trail = None
 
         if line[0] == ":":
-            prefix_end = line.find(" ")
-            self._prefix = line[1:prefix_end]
-            bang_loc = self._prefix.find("!")
-            if bang_loc != -1:
-                self._nick = self._prefix[:bang_loc]
-            else:
-                self._nick = self._prefix
-        else:
-            prefix_end = -1
-
-        if " :" in line:
-            trail_start = line.find(" :")
-            self._trail = line[trail_start + 2:].rstrip("\r\n")
-        else:
-            trail_start = len(line)
-
-        cmd_and_params = line[prefix_end + 1:trail_start].split(" ")
-        self._command = cmd_and_params[0]
-        if len(cmd_and_params) > 0:
-            self._params = cmd_and_params[1:]
+            self._prefix, line = spl1n(line, " ")
+            self._nick = self._prefix.split("!")[0]
+        self._command, line = spl1n(line, " ")
+        self._params, trail = spl1n(line, " :")
+        self._params = self._params.split(" ")
+        if trail:
+            self._params.append(trail)
 
     @property
     def raw(self):
@@ -74,4 +56,17 @@ class Line(object):
     @property
     def trail(self):
         return self._trail
+
+def spl1n(string, sep):
+    """Splits string once on the first occurance of sep
+    returns [head, tail] if succesful, and 
+    returns (string, None) if not.
+
+    Intended for scenarios when using unpacking with an unknown string.
+    """
+    r = string.split(sep, 1)
+    if len(r) > 1:
+        return r
+    else:
+       return string, None
 
