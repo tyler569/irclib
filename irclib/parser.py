@@ -27,9 +27,12 @@ class Line(object):
         if line[0] == ":":
             self._prefix, line = spl1n(line, " ")
             self._nick = self._prefix.split("!")[0]
+        else:
+            self._prefix = None
+            self._nick = None
         self._command, line = spl1n(line, " ")
-        self._params, trail = spl1n(line, " :")
-        self._params = self._params.split(" ")
+        self._params, trail = spl1n(line, ":")
+        self._params = self._params.strip().split(" ")
         if trail:
             self._params.append(trail)
 
@@ -52,10 +55,6 @@ class Line(object):
     @property
     def params(self):
         return self._params
-
-    @property
-    def trail(self):
-        return self._trail
 
 def spl1n(string, sep):
     """Splits string once on the first occurance of sep

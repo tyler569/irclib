@@ -98,8 +98,10 @@ class BaseIRC(object):
         sockf = self.sock.makefile()
 
         for line in sockf:
+            line = line.rstrip("\r\n")
             if self.printing:
-                print((">> " + line).rstrip('\r\n'))
+                print((">> " + line))
             p_line = parser.Line(line)
+            print(p_line.prefix, p_line.command, p_line.params)
             self._handle_register(p_line)
 

@@ -20,7 +20,7 @@ class BaseClient(BaseIRC):
 
     def handle_PING(self, line):
         """Implements PONG"""
-        send = "PONG :{}".format(line.trail)
+        send = "PONG :{}".format(line.params[-1])
         self._send(send)
 
     def handle_PRIVMSG(self, line):
@@ -31,6 +31,6 @@ class BaseClient(BaseIRC):
         except AttributeError:
             return
         try:
-            getattr(self, "cmd_" + line.trail.split()[0][1:].upper())(line)
+            getattr(self, "cmd_" + line.params[-1].split()[0][1:].upper())(line)
         except AttributeError:
             return
