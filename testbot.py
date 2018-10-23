@@ -8,31 +8,33 @@ All Rights Reserved
 For license information, see COPYING
 """
 
-from irclib.baseclient import BaseClient
+from irclib.baseirc import IRCClient
 
 
-class MyIRC(BaseClient):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.cmdchar = "~"
+bot = IRCClient(
+    ("irc.openredstone.org", 6667),
+    "tbot", "Back to Python bby", "tbot",
+    "#openredstone"
+)
 
-    def handle_JOIN(self, line):
-        if line.nick == self.nick:
-            self.privmsg("Hello everybody! Do ~help")
 
-    def cmd_HELP(self, line):
-        self.privmsg("You can do ~test or ~pm", target=line.nick)
+@bot.register("001")
+def server_auth(bot, line):
+    bot.privmsg("NickServ", "identify orepassword")
+    bot.join(bot.channel)
 
-    def cmd_TEST(self, line):
-        self.privmsg("This is a test, it worked too, how about that!",
-            target=line.nick)
 
-if __name__ == "__main__":
-    irc = MyIRC(
-        ("server.ip", 6667),
-        ("usern", "hostn", "realn"),
-        "nickn",
-        "#channel"
-    )
+@bot.register("JOIN")
+def join(bot, line):
+    print("I joined a place!")
 
-    irc.run()
+
+@bot.register("PRIVMSG")
+def handle_chat(bot, line):
+    print("We are handling #confirmed")
+    if line.nick == "tyler" and line.trail[0] == '~':
+        bot.privmsg(bot.channel, "Hi!")
+
+
+print(bot.callbacks)
+bot.run()

@@ -1,100 +1,65 @@
-"""
-IRC clientside library
 
-Copyright (C) 2014, Tyler Philbrick
-All Rights Reserved
-For license information, see COPYING
-"""
+# IRC clientside library
+#
+# Copyright (C) 2014, 2017, Tyler Philbrick
+# All Rights Reserved
+# For license information, see COPYING
 
 import socket
-from collections import namedtuple, defaultdict
 
 import irclib.parser as parser
 
 
-class BaseIRC(object):
-    """Client object makes connection to IRC server and handles data
+def pong(bot, line):
+    bot.pong(line.trail)
 
-    example usage:
-    """
-    #TODO : update usage example
 
-    def __init__(self, server, names, nick, channel, sock=None, printing=True):
-        """Initialiser creates an unbound socket"""
-        self.sock = sock or socket.socket()
-        self.server = server
-        self.names = names
-        self.nick = nick
+class IRCClient:
+    def __init__(self, server, user, real, nick, channel, printing=True):
+        self.sock = socket.socket()
+        self.nickname = nick
         self.channel = channel
         self.printing = printing
+        self.callbacks = {"PING": pong}
 
-    def _send(self, message):
-        """Private method invoked by others to send on socket
+        self.connect(server)
+        self.ident(user, real)
+        self.nick(nick)
 
-        Adds \r\n at the end of messages
-        """
+    def raw_send(self, message):
         if self.printing:
             print("<< " + message)
         self.sock.sendall((message + "\r\n").encode())
 
-    def connect(self, server=None):
-        """Implements socket connection to IRC server
-
-        server_info is tuple of (hostname, port)
-        """
-        server = server or self.server
+    def connect(self, server):
         self.sock.connect(server)
 
-    def ident(self, names=None):
-        """Sends irclib identity to server,
+    def ident(self, user, real):
+        self.raw_send("USER {} 0 * :{}".format(user, real))
 
-        Can take either an arbitrary iterable eqivalent to
-        [user, host, real]
-        or a dict of schema:
-        {'user':user, 'host':host, 'real':real}
-        """
-        names = names or self.names
-        if isinstance(names, dict):
-            send = "USER {user} 0 * :{real}".format(**names)
-        else:
-            send = "USER {} 0 * :{}".format(*names)
-        self._send(send)
+    def nick(self, nick):
+        self.raw_send("NICK {}".format(nick))
 
-    def set_nick(self, nick=None):
-        """Binds or changes irclib nickname
+    def join(self, channel):
+        self.raw_send("JOIN {}".format(channel))
 
-        Note that some servers require you to privmsg a nickname bot
-        to verify registerd nicknames
-        """
-        nick = nick or self.nick
-        send = "NICK {}".format(nick)
-        self._send(send)
+    def pong(self, message):
+        self.raw_send("PONG :{}".format(message))
 
-    def join(self, channel=None):
-        """Implements irclib joining a channel"""
-        channel = channel or self.channel
-        send = "JOIN {}".format(channel)
-        self._send(send)
+    def privmsg(self, message, target):
+        self.raw_send("PRIVMSG {} :{}".format(target, message))
 
-    def privmsg(self, message, target=None):
-        """Sends a message to <target>
-
-        Can be channel or individual
-        """
-        target = target or self.channel
-
-        send = "PRIVMSG {} :{}".format(target, message)
-        self._send(send)
+    def register(self, name):
+        def reg(fn):
+            self.callbacks[name] = fn
+            return fn
+        return reg
 
     def _handle_register(self, line):
-        """Handling of registered operations"""
-        try:
-            getattr(self, "handle_" + line.command.upper())(line)
-        except AttributeError:
-            pass
+        if line.command in self.callbacks:
+            self.callbacks[line.command](self, line)
 
     def run(self):
-        """Run IRC program"""
         sockf = self.sock.makefile()
 
         for line in sockf:
@@ -102,6 +67,7 @@ class BaseIRC(object):
             if self.printing:
                 print((">> " + line))
             p_line = parser.Line(line)
-            print(p_line.prefix, p_line.command, p_line.params)
+            # print(p_line.prefix, p_line.command, p_line.params)
+            print("'", p_line.command, "'")
             self._handle_register(p_line)
 
